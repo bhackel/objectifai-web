@@ -1,16 +1,13 @@
 import streamlit as st
 from tensorflow.keras.models import load_model as tf_load_model
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import face_recognition
 from skimage import transform
 
 
 # Function to rotate and align the given image (source: carykh)
 def face_aligner(image):
-    IMAGE_EXTENSIONS = ['.png', '.jpg']
-    OUTPUT_EXTENSION = '.png'
-
     DESIRED_X = 64
     DESIRED_Y = 42
     DESIRED_SIZE = 48
@@ -39,42 +36,43 @@ def face_aligner(image):
         nB = get_norm(image_numpy[:, :, 2])
         colorAmount = np.mean(np.square(nR - nG)) + np.mean(np.square(nR - nB)) + np.mean(np.square(nG - nB))
     # We need there to only be one face in the image, AND we need it to be a colored image.
-    if len(face_landmarks) == 1 and colorAmount >= 0.04:
-        leftEyePosition = get_avg(face_landmarks[0], 'left_eye')
-        rightEyePosition = get_avg(face_landmarks[0], 'right_eye')
-        nosePosition = get_avg(face_landmarks[0], 'nose_tip')
-        mouthPosition = get_avg(face_landmarks[0], 'bottom_lip')
-
-        centralPosition = (leftEyePosition + rightEyePosition) / 2
-
-        faceWidth = np.linalg.norm(leftEyePosition - rightEyePosition)
-        faceHeight = np.linalg.norm(centralPosition - mouthPosition)
-        if faceHeight * 0.7 <= faceWidth <= faceHeight * 1.5:
-            faceSize = (faceWidth + faceHeight) / 2
-
-            toScaleFactor = faceSize / DESIRED_SIZE
-            toXShift = (centralPosition[0])
-            toYShift = (centralPosition[1])
-            toRotateFactor = np.arctan2(rightEyePosition[1] - leftEyePosition[1],
-                                        rightEyePosition[0] - leftEyePosition[0])
-
-            rotateT = transform.SimilarityTransform(scale=toScaleFactor, rotation=toRotateFactor,
-                                                    translation=(toXShift, toYShift))
-            moveT = transform.SimilarityTransform(scale=1, rotation=0, translation=(-DESIRED_X, -DESIRED_Y))
-
-            outputArr = transform.warp(image=image_numpy, inverse_map=(moveT + rotateT))[0:FINAL_IMAGE_HEIGHT,
-                        0:FINAL_IMAGE_WIDTH]
-
-            outputArr = (outputArr*255).astype(np.uint8)
-
-            imageSaved = True
-    if imageSaved:
-        print("Aligned image successfully!")
-        return outputArr
-    else:
-        print("Face image alignment failed. Either the image is grayscale, has no face, or the ratio of eye distance to "
-              "mouth distance isn't close enough to 1.")
+    if not (len(face_landmarks) == 1 and colorAmount >= 0.04):
+        print(f"Alignment failed: grayscale: {colorAmount >= 0.04}, or face count: {len(face_landmarks)}")
         return None
+
+    leftEyePosition = get_avg(face_landmarks[0], 'left_eye')
+    rightEyePosition = get_avg(face_landmarks[0], 'right_eye')
+    nosePosition = get_avg(face_landmarks[0], 'nose_tip')
+    mouthPosition = get_avg(face_landmarks[0], 'bottom_lip')
+
+    centralPosition = (leftEyePosition + rightEyePosition) / 2
+
+    faceWidth = np.linalg.norm(leftEyePosition - rightEyePosition)
+    faceHeight = np.linalg.norm(centralPosition - mouthPosition)
+
+    # Check face dimensions
+    if not (faceHeight * 0.7 <= faceWidth <= faceHeight * 1.5):
+        print("Alignment failed: face dimensions")
+        return None
+
+    faceSize = (faceWidth + faceHeight) / 2
+
+    toScaleFactor = faceSize / DESIRED_SIZE
+    toXShift = (centralPosition[0])
+    toYShift = (centralPosition[1])
+    toRotateFactor = np.arctan2(rightEyePosition[1] - leftEyePosition[1],
+                                rightEyePosition[0] - leftEyePosition[0])
+
+    rotateT = transform.SimilarityTransform(scale=toScaleFactor, rotation=toRotateFactor,
+                                            translation=(toXShift, toYShift))
+    moveT = transform.SimilarityTransform(scale=1, rotation=0, translation=(-DESIRED_X, -DESIRED_Y))
+
+    outputArr = transform.warp(image=image_numpy, inverse_map=(moveT + rotateT))[0:FINAL_IMAGE_HEIGHT,
+                0:FINAL_IMAGE_WIDTH]
+
+    outputArr = (outputArr*255).astype(np.uint8)
+
+    return outputArr
 
 # Function to load model
 @st.cache_data
@@ -84,6 +82,8 @@ def load_model():
 
 # Function to process the image using your model
 def process_image(image):
+    # Apply rotation tag if it exists
+    image = ImageOps.exif_transpose(image)
     image = np.array(image)
     # Remove alpha channel
     image = image[:,:,:3]
