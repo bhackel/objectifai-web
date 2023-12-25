@@ -103,22 +103,25 @@ def process_image(image, model):
 # Streamlit app code
 def main():
     st.title('Objectif.ai')
-    st.write('Upload an image')
 
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("Choose an image or take a picture", type=["jpg", "png", "jpeg"])
 
     if uploaded_file is not None:
-        model = load_model()  # Load the model
-
-        # Display the uploaded image
-        image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        # Load the model
+        model = load_model()
 
         # Process the image and get the output value
+        image = Image.open(uploaded_file)
         output_value = process_image(image, model)
 
-        # Display the output value
-        st.write('Output Value:', round(output_value, 1))
+        # Display the output rating
+        st.markdown(f"<h1 style='text-align: center;'>Objective Rating: {round(output_value, 1)}</h1>", unsafe_allow_html=True)
+
+        # Display the uploaded image
+        st.image(image, caption='Uploaded Image', use_column_width=True)
+
+
+
 
 if __name__ == '__main__':
     main()
