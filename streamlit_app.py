@@ -83,19 +83,25 @@ def load_model():
     return model
 
 # Function to process the image using your model
-def process_image(image, model):
+def process_image(image):
     # Align the face into the center
     image = np.array(image)
     image = face_aligner(image)
+    # Check if face alignment failed
+    if image is None:
+        return None
     # Normalize pixel values
     image = image / 255.0
     # Reshape the array to (1, 128, 128, 3) for compatibility
     image = np.expand_dims(image, axis=0)
+    return image
+
+# Function to get a rating from an image
+def get_rating(image, model):
     # get rating as a decimal from 0 to 1, convert to 0 to 10
     rating = model(image)
     rating = float(rating.numpy()[0])
     rating = round(rating*10, 2)
-
     return rating
 
 # Streamlit app code
@@ -109,13 +115,19 @@ def main():
         # Load the model
         model = load_model()
 
-        # Process the image and get the output value
+        # Process the image
         image = Image.open(uploaded_file)
-        output_value = process_image(image, model)
+        aligned_image = process_image(image)
+        # Get the rating
+        rating = get_rating(aligned_image, model)
 
-        # Display the output rating
-        st.markdown(f"<h3 style='text-align: center;'>Objective Rating:</h3>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='text-align: center; margin-top: -20px;'>{round(output_value, 1)}</h1>", unsafe_allow_html=True)
+        # Display failed message
+        if rating is None:
+            st.markdown(f"<h3 style='text-align: center;'>Detection failed, please try a different image</h3>", unsafe_allow_html=True)
+        else:
+            # Display the output rating
+            st.markdown(f"<h3 style='text-align: center;'>Objective Rating:</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h1 style='text-align: center; margin-top: -20px;'>{round(rating, 1)}</h1>", unsafe_allow_html=True)
 
         # Display the uploaded image
         st.image(image, caption='Uploaded Image', use_column_width=True)
