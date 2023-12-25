@@ -8,5 +8,6 @@ dependencies:
   - numpy
   - tensorflow
   - dlib
+  - pip
   - pip:
     - face-recognition
