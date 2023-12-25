@@ -82,8 +82,6 @@ def load_model():
 
 # Function to process the image using your model
 def process_image(image):
-    # Apply rotation tag if it exists
-    image = ImageOps.exif_transpose(image)
     image = np.array(image)
     # Remove alpha channel
     image = image[:,:,:3]
@@ -119,6 +117,8 @@ def main():
 
         # Process the image
         image = Image.open(uploaded_file)
+        # Apply rotation tag if it exists
+        image = ImageOps.exif_transpose(image)
         aligned_image = process_image(image)
 
         # Display failed message
