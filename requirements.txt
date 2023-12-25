@@ -1,5 +1,0 @@
-Pillow
-streamlit
-numpy
-tensorflow
-face-recognition
