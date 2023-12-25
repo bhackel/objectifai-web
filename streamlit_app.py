@@ -76,12 +76,10 @@ def face_aligner(image):
               "mouth distance isn't close enough to 1.")
         return None
 
-
-# Load your pre-trained TensorFlow model
-# Replace this with loading your own model
+# Function to load model
 @st.cache_data
 def load_model():
-    model = tf_load_model('model')  # Replace with your model loading code
+    model = tf_load_model('model')
     return model
 
 # Function to process the image using your model
@@ -102,9 +100,10 @@ def process_image(image, model):
 
 # Streamlit app code
 def main():
-    st.title('Objectif.ai')
+    st.markdown(f"<h1 style='text-align: center;'>Objectif.ai</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align: center;'>Upload an image or take a picture</h3>", unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Choose an image or take a picture", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
     if uploaded_file is not None:
         # Load the model
@@ -115,12 +114,11 @@ def main():
         output_value = process_image(image, model)
 
         # Display the output rating
-        st.markdown(f"<h1 style='text-align: center;'>Objective Rating: {round(output_value, 1)}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center;'>Objective Rating:</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; margin-top: -20px;'>{round(output_value, 1)}</h1>", unsafe_allow_html=True)
 
         # Display the uploaded image
         st.image(image, caption='Uploaded Image', use_column_width=True)
-
-
 
 
 if __name__ == '__main__':
