@@ -1,23 +1,99 @@
 import streamlit as st
-import tensorflow as tf
+from tensorflow.keras.models import load_model as tf_load_model
 import numpy as np
 from PIL import Image
+import face_recognition
+
+
+# Function to rotate and align the given image (source: carykh)
+def face_aligner(image):
+    IMAGE_EXTENSIONS = ['.png', '.jpg']
+    OUTPUT_EXTENSION = '.png'
+
+    DESIRED_X = 64
+    DESIRED_Y = 42
+    DESIRED_SIZE = 48
+
+    FINAL_IMAGE_WIDTH = 128
+    FINAL_IMAGE_HEIGHT = 128
+
+    def get_avg(face, landmark):
+        cum = np.zeros(2)
+        for point in face[landmark]:
+            cum[0] += point[0]
+            cum[1] += point[1]
+        return cum / len(face[landmark])
+
+
+    def get_norm(a):
+        return (a - np.mean(a)) / np.std(a)
+
+    image_numpy = image
+    st.write("COCK AND BALLS")
+    face_landmarks = face_recognition.face_landmarks(image_numpy)
+    colorAmount = 0
+    imageSaved = False
+    st.write("COCK AND BALLS")
+    if len(image_numpy.shape) == 3:
+        nR = get_norm(image_numpy[:, :, 0])
+        nG = get_norm(image_numpy[:, :, 1])
+        nB = get_norm(image_numpy[:, :, 2])
+        colorAmount = np.mean(np.square(nR - nG)) + np.mean(np.square(nR - nB)) + np.mean(np.square(nG - nB))
+    # We need there to only be one face in the image, AND we need it to be a colored image.
+    if len(face_landmarks) == 1 and colorAmount >= 0.04:
+        leftEyePosition = get_avg(face_landmarks[0], 'left_eye')
+        rightEyePosition = get_avg(face_landmarks[0], 'right_eye')
+        nosePosition = get_avg(face_landmarks[0], 'nose_tip')
+        mouthPosition = get_avg(face_landmarks[0], 'bottom_lip')
+
+        centralPosition = (leftEyePosition + rightEyePosition) / 2
+
+        faceWidth = np.linalg.norm(leftEyePosition - rightEyePosition)
+        faceHeight = np.linalg.norm(centralPosition - mouthPosition)
+        if faceHeight * 0.7 <= faceWidth <= faceHeight * 1.5:
+            faceSize = (faceWidth + faceHeight) / 2
+
+            toScaleFactor = faceSize / DESIRED_SIZE
+            toXShift = (centralPosition[0])
+            toYShift = (centralPosition[1])
+            toRotateFactor = np.arctan2(rightEyePosition[1] - leftEyePosition[1],
+                                        rightEyePosition[0] - leftEyePosition[0])
+
+            rotateT = transform.SimilarityTransform(scale=toScaleFactor, rotation=toRotateFactor,
+                                                    translation=(toXShift, toYShift))
+            moveT = transform.SimilarityTransform(scale=1, rotation=0, translation=(-DESIRED_X, -DESIRED_Y))
+
+            outputArr = transform.warp(image=image_numpy, inverse_map=(moveT + rotateT))[0:FINAL_IMAGE_HEIGHT,
+                        0:FINAL_IMAGE_WIDTH]
+
+            outputArr = (outputArr*255).astype(np.uint8)
+
+            imageSaved = True
+    if imageSaved:
+        print("Aligned image successfully!")
+        return outputArr
+    else:
+        print("Face image alignment failed. Either the image is grayscale, has no face, or the ratio of eye distance to "
+              "mouth distance isn't close enough to 1.")
+        return None
+
 
 # Load your pre-trained TensorFlow model
 # Replace this with loading your own model
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_model():
-    model = tf.keras.models.load_model('model')  # Replace with your model loading code
+    model = tf_load_model('model')  # Replace with your model loading code
     return model
 
 # Function to process the image using your model
 def process_image(image, model):
-    # Preprocess the image for your model (resize, normalize, etc.)
-    # Replace this with your image preprocessing code
+    # Align the face into the center
+    print("COCK AND BALLS", file=sys.stderr)
     image = np.array(image)
-    # Normalize
+    image = face_aligner(image)
+    # Normalize pixel values
     image = image / 255.0
-    # Reshape the array to (1, 128, 128, 3)
+    # Reshape the array to (1, 128, 128, 3) for compatibility
     image = np.expand_dims(image, axis=0)
     # get rating as a decimal from 0 to 1, convert to 0 to 10
     rating = model(image)
@@ -28,7 +104,7 @@ def process_image(image, model):
 
 # Streamlit app code
 def main():
-    st.title('Image ML App')
+    st.title('Objectif.ai')
     st.write('Upload an image')
 
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
