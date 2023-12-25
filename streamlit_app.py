@@ -29,11 +29,9 @@ def face_aligner(image):
         return (a - np.mean(a)) / np.std(a)
 
     image_numpy = image
-    st.write("COCK AND BALLS")
     face_landmarks = face_recognition.face_landmarks(image_numpy)
     colorAmount = 0
     imageSaved = False
-    st.write("COCK AND BALLS")
     if len(image_numpy.shape) == 3:
         nR = get_norm(image_numpy[:, :, 0])
         nG = get_norm(image_numpy[:, :, 1])
@@ -88,7 +86,6 @@ def load_model():
 # Function to process the image using your model
 def process_image(image, model):
     # Align the face into the center
-    print("COCK AND BALLS", file=sys.stderr)
     image = np.array(image)
     image = face_aligner(image)
     # Normalize pixel values
