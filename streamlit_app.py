@@ -84,8 +84,10 @@ def load_model():
 
 # Function to process the image using your model
 def process_image(image):
-    # Align the face into the center
     image = np.array(image)
+    # Remove alpha channel
+    image = image[:,:,:3]
+    # Align the face into the center
     image = face_aligner(image)
     # Check if face alignment failed
     if image is None:
