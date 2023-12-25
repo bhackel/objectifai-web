@@ -3,6 +3,7 @@ from tensorflow.keras.models import load_model as tf_load_model
 import numpy as np
 from PIL import Image
 import face_recognition
+from skimage import transform
 
 
 # Function to rotate and align the given image (source: carykh)
