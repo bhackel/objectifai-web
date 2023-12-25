@@ -118,16 +118,16 @@ def main():
         # Process the image
         image = Image.open(uploaded_file)
         aligned_image = process_image(image)
-        # Get the rating
-        rating = get_rating(aligned_image, model)
 
         # Display failed message
-        if rating is None:
+        if aligned_image is None:
             st.markdown(f"<h3 style='text-align: center;'>Detection failed, please try a different image</h3>", unsafe_allow_html=True)
-        else:
-            # Display the output rating
-            st.markdown(f"<h3 style='text-align: center;'>Objective Rating:</h3>", unsafe_allow_html=True)
-            st.markdown(f"<h1 style='text-align: center; margin-top: -20px;'>{round(rating, 1)}</h1>", unsafe_allow_html=True)
+            return
+
+        # Display rating
+        rating = get_rating(aligned_image, model)
+        st.markdown(f"<h3 style='text-align: center;'>Objective Rating:</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; margin-top: -20px;'>{round(rating, 1)}</h1>", unsafe_allow_html=True)
 
         # Display the uploaded image
         st.image(image, caption='Uploaded Image', use_column_width=True)
