@@ -1,13 +1,13 @@
 name: objectifai-environment
 channels:
   - defaults
-  - conda-forge  # Adding conda-forge channel
+  - conda-forge
 dependencies:
+  - pip
   - pillow
   - streamlit
   - numpy
   - tensorflow
   - dlib
-  - pip
   - pip:
     - face-recognition
