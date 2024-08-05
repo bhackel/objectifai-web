@@ -1,16 +1,24 @@
 from flask import Flask, request, render_template, url_for
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 from tensorflow.keras.models import load_model
 import os
 import uuid
 import random
 from util import face_aligner
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'static/uploads/'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Define the maximum width and height for the uploaded images
+MAX_WIDTH = 400
+MAX_HEIGHT = 400
+# Define the maximum file age (in minutes) before deletion
+MAX_FILE_AGE_MINUTES = 5
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -21,53 +29,87 @@ def upload_file():
         if file.filename == '':
             return render_template('index.html', error="No file selected. Please select an image.")
         if file:
-            try:
-                # Generate a unique filename
-                filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
+            # Generate a unique filename
+            filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
 
-                # Save the file
-                file.save(filepath)
+            # Open the image
+            image = Image.open(file)
 
-                image = Image.open(filepath)
-                image = np.array(image)
-                aligned_image = face_aligner(image)
-                if aligned_image is None:
-                    os.remove(filepath)  # Remove file if face not detected
-                    raise ValueError("Face not detected in the image. Please try again with a clear image of your face.")
-                aligned_image = Image.fromarray(aligned_image)
-                aligned_image = aligned_image.resize((128, 128))
-                if aligned_image.mode != 'RGB':
-                    aligned_image = aligned_image.convert('RGB')
-                aligned_image = np.array(aligned_image)
-                aligned_image = aligned_image / 255.0
-                aligned_image = np.expand_dims(aligned_image, axis=0)
-                model = load_model('model_converted.keras')
-                prediction = model.predict(aligned_image)
-                rating = prediction[0][0]
+            # Apply rotation tag if it exists
+            image = ImageOps.exif_transpose(image)
 
-                # Convert the rating to a 0-10 scale
-                rating = round(rating * 10, 2)
+            # Resize image while maintaining aspect ratio
+            image.thumbnail((MAX_WIDTH, MAX_HEIGHT))
 
-                # Determine the Harry Potter House based on the rating
-                if rating >= 8.5:
-                    house = "Ravenclaw"
-                elif rating >= 5:
-                    house = "Gryffindor"
-                else:
-                    house = "Hufflepuff" if random.choice([0, 1]) else "Slytherin"
+            # Save the resized image
+            image.save(filepath)
 
-                image_url = url_for('static', filename='uploads/' + filename)
-                response = render_template('result.html', rating=rating, house=house, image_url=image_url)
+            # Convert image to RGB (if not already in RGB mode)
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
 
-                # Delete the image after rendering the response
-                os.remove(filepath)
+            # Convert image to NumPy array and remove alpha channel if present
+            image_np = np.array(image)[:, :, :3]
 
-                return response
-            except Exception as e:
-                return render_template('index.html', error=str(e))
+            # Align the face into the center
+            aligned_image = face_aligner(image_np)
+            if aligned_image is None:
+                os.remove(filepath)  # Remove file if face not detected
+                return render_template('index.html', error="Face not detected, please try again")
+
+            # Resize aligned image for model input
+            aligned_image = Image.fromarray(aligned_image).resize((128, 128))
+
+            # Normalize and prepare image for model
+            aligned_image = np.array(aligned_image) / 255.0
+            aligned_image = np.expand_dims(aligned_image, axis=0)
+
+            # Load model and make prediction
+            model = load_model('model_converted.keras')
+            prediction = model.predict(aligned_image)
+            rating = prediction[0][0]
+
+            # Convert the rating to a 0-10 scale
+            rating = round(rating * 10, 2)
+
+            # Determine the Harry Potter House based on the rating
+            if rating >= 8.5:
+                house = "Ravenclaw"
+            elif rating >= 5:
+                house = "Gryffindor"
+            else:
+                house = "Hufflepuff" if random.choice([0, 1]) else "Slytherin"
+
+            image_url = url_for('static', filename='uploads/' + filename)
+            response = render_template('result.html', rating=rating, house=house, image_url=image_url)
+
+            # Delete the image after rendering the response
+            # os.remove(filepath)
+
+            return response
     return render_template('index.html')
 
+def delete_old_files():
+    """Deletes files older than MAX_FILE_AGE_MINUTES."""
+    now = datetime.now()
+    cutoff = now - timedelta(minutes=MAX_FILE_AGE_MINUTES)
+    for filename in os.listdir(UPLOAD_FOLDER):
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.isfile(filepath):
+            file_creation_time = datetime.fromtimestamp(os.path.getctime(filepath))
+            if file_creation_time < cutoff:
+                os.remove(filepath)
+                print(f"Deleted old file: {filename}")
+
+# Set up the background scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=delete_old_files, trigger="interval", minutes=1)
+scheduler.start()
+
+# Shut down the scheduler when exiting the app
+import atexit
+atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5100)

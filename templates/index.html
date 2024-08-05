@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Objectif.ai</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -61,12 +62,21 @@
       margin: 0 0 10px;
       font-weight: 500;
       color: #333;
+      font-size: 2rem; /* Adjust as needed */
     }
 
     h2 {
       margin: 0 0 30px;
       font-weight: 400;
       color: #666;
+      font-size: 1.5rem; /* Adjust as needed */
+    }
+
+    .error-message {
+      color: red;
+      font-size: 16px;
+      margin: 20px 0; /* Margin for spacing */
+      line-height: 1.5;
     }
 
     input[type="file"] {
@@ -82,11 +92,57 @@
       border-radius: 5px;
       cursor: pointer;
       transition: background-color 0.3s;
-      margin-top: 20px;
+      margin-top: 20px; /* Spacing above the button */
     }
 
     .upload-button:hover {
       background-color: #ad1457; /* Darker magenta for hover */
+    }
+
+    .processing {
+      display: none;
+      margin-top: 20px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .processing-animation {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #d81b60;
+      border-top: 4px solid #ff6f91;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 10px;
+      margin-left: auto;
+      margin-right: auto;
+      will-change: transform; /* Optimize animation performance */
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .drop-zone {
+        padding: 20px;
+        width: 80vw;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        margin: 0 0 20px;
+      }
+
+      .upload-button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
@@ -94,17 +150,26 @@
   <div class="drop-zone" id="dropZone">
     <h1>Objectif.ai</h1>
     <h2>AI-Powered Objectifier</h2>
+    {% if error %}
+      <div class="error-message">{{ error }}</div>
+    {% endif %}
     <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
       <input id="fileInput" type="file" name="file" accept="image/*" />
       <label for="fileInput" class="upload-button">Take or Upload Picture</label>
       <input type="submit" value="Upload" class="upload-button" style="margin-top: 10px; display: none;">
     </form>
+    <div class="processing">
+      Processing...
+      <div class="processing-animation"></div>
+    </div>
   </div>
 
   <script>
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadForm = document.getElementById('uploadForm');
+    const processing = document.querySelector('.processing');
+    const uploadButtons = document.querySelectorAll('.upload-button');
 
     dropZone.addEventListener('dragover', (event) => {
       event.preventDefault();
@@ -120,14 +185,24 @@
       event.stopPropagation();
       dropZone.classList.remove('dragover');
       fileInput.files = event.dataTransfer.files;
+      showProcessing();
       uploadForm.submit();
     });
 
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length > 0) {
+        showProcessing();
         uploadForm.submit(); // Auto-submit form on file selection
       }
     });
+
+    function showProcessing() {
+      // Hide the form elements
+      uploadButtons.forEach(button => button.style.display = 'none');
+      fileInput.style.display = 'none';
+      // Show the processing animation
+      processing.style.display = 'block';
+    }
   </script>
 </body>
 </html>

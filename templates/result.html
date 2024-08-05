@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Objectif.ai - Result</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -22,20 +23,24 @@
       background-color: white;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       max-width: 500px;
+      width: 90%;
       display: flex;
       flex-direction: column;
       align-items: center;
+      text-align: center;
+      box-sizing: border-box; /* Include padding in width/height calculations */
     }
 
     h1, h2 {
       margin: 0;
       font-weight: 500;
       color: #333;
+      font-size: 2rem; /* Use rem for better scalability */
     }
 
     p {
       margin: 20px 0;
-      font-size: 24px;
+      font-size: 1.5rem; /* Adjust as needed */
       font-weight: 400;
       color: #666;
     }
@@ -47,25 +52,52 @@
       margin-top: 20px;
     }
 
-    .share-button {
+    .button {
       background-color: #d81b60; /* Magenta color */
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 24px; /* Increase padding for touch devices */
       font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
       margin-top: 20px;
       transition: background-color 0.3s;
+      touch-action: manipulation; /* Improve touch responsiveness */
     }
 
-    .share-button:hover {
+    .button:hover {
       background-color: #ad1457; /* Darker magenta for hover */
     }
 
     .hidden {
       display: none;
     }
+
+    @media (max-width: 600px) {
+      .result-container {
+        padding: 20px;
+        width: 90vw;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+      }
+
+      p {
+        font-size: 1.2rem;
+      }
+
+      .button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -75,7 +107,8 @@
     <p>Your rating: <strong>{{ rating }}</strong></p>
     <p>You belong to: <strong>{{ house }}</strong></p>
     <img src="{{ image_url }}" alt="Uploaded Image">
-    <button id="shareButton" class="share-button hidden">Share Result</button>
+    <button id="shareButton" class="button hidden">Share Result</button>
+    <button class="button" onclick="window.location.href='/'">Rate Another</button>
   </div>
 
   <script>

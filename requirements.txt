@@ -1,6 +1,7 @@
-pillow
-Flask
-numpy
-tensorflow
-scikit-image
+pillow==10.4.0
+Flask==3.0.3
+numpy==1.26.4
+tensorflow==2.17.0
+scikit-image==0.24.0
+apscheduler==3.10.4
 face_recognition @ git+https://github.com/thetoby9944/face_recognition
