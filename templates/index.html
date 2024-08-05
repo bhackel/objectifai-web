@@ -2,44 +2,102 @@
 <html>
 <head>
   <title>Objectif.ai</title>
-  <style type="text/css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
     body {
       height: 100vh;
       display: flex;
-
       align-items: center;
       justify-content: center;
       text-align: center;
+      background: linear-gradient(135deg, #f3f4f6, #e2e8f0);
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
     }
 
     .drop-zone {
-      border: 2px dashed #ccc;
-      padding: 20px;
+      position: relative;
+      padding: 40px;
       width: 80vw;
-      height: 80vh;
+      max-width: 500px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    .drop-zone:before {
+      content: '';
+      position: absolute;
+      top: -5px; left: -5px; right: -5px; bottom: -5px;
+      background: linear-gradient(120deg, #d81b60, #ff6f91, #ff9bb5, #ffafc0);
+      z-index: -1;
+      border-radius: 15px;
+      animation: gradient-border 5s infinite;
+      background-size: 300% 300%;
+    }
+
+    .drop-zone:hover {
+      background-color: #f0f4f8;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
 
     .drop-zone.dragover {
-      background-color: #f0f0f0;
+      background-color: #e2e8f0;
+    }
+
+    @keyframes gradient-border {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    h2 {
+      margin: 0 0 30px;
+      font-weight: 400;
+      color: #666;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-button {
+      background-color: #d81b60; /* Magenta color */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 20px;
+    }
+
+    .upload-button:hover {
+      background-color: #ad1457; /* Darker magenta for hover */
     }
   </style>
 </head>
 <body>
-  <div id="dropZone">
+  <div class="drop-zone" id="dropZone">
     <h1>Objectif.ai</h1>
-    <form
-      id="uploadForm"
-      action="/"
-      method="post"
-      enctype="multipart/form-data"
-    >
-      <input id="fileInput" type="file" name="file" />
-      <input type="submit" value="rm" />
+    <h2>AI-Powered Objectifier</h2>
+    <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+      <input id="fileInput" type="file" name="file" accept="image/*" />
+      <label for="fileInput" class="upload-button">Take or Upload Picture</label>
+      <input type="submit" value="Upload" class="upload-button" style="margin-top: 10px; display: none;">
     </form>
   </div>
 
@@ -48,15 +106,28 @@
     const fileInput = document.getElementById('fileInput');
     const uploadForm = document.getElementById('uploadForm');
 
+    dropZone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
     dropZone.addEventListener('drop', (event) => {
       event.preventDefault();
       event.stopPropagation();
-
-      let file = event.dataTransfer.files[0];
+      dropZone.classList.remove('dragover');
       fileInput.files = event.dataTransfer.files;
       uploadForm.submit();
     });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        uploadForm.submit(); // Auto-submit form on file selection
+      }
+    });
   </script>
 </body>
-
 </html>

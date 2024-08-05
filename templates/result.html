@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Objectif.ai - Result</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(135deg, #f3f4f6, #e2e8f0);
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+    }
+
+    .result-container {
+      border: 2px solid #d81b60; /* Magenta color */
+      border-radius: 10px;
+      padding: 40px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1, h2 {
+      margin: 0;
+      font-weight: 500;
+      color: #333;
+    }
+
+    p {
+      margin: 20px 0;
+      font-size: 24px;
+      font-weight: 400;
+      color: #666;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .share-button {
+      background-color: #d81b60; /* Magenta color */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s;
+    }
+
+    .share-button:hover {
+      background-color: #ad1457; /* Darker magenta for hover */
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="result-container">
+    <h1>Objectif.ai</h1>
+    <h2>AI-Powered Objectifier</h2>
+    <p>Your rating: <strong>{{ rating }}</strong></p>
+    <p>You belong to: <strong>{{ house }}</strong></p>
+    <img src="{{ image_url }}" alt="Uploaded Image">
+    <button id="shareButton" class="share-button hidden">Share Result</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      const shareButton = document.getElementById('shareButton');
+      const mainPageUrl = 'https://objectif.ai/'; // Replace with your main page URL
+      const shareData = {
+        title: 'Objectif.ai Result',
+        text: `My rating is {{ rating }} and I belong to {{ house }}! Check yours at ${mainPageUrl}`,
+        url: mainPageUrl // The main page URL for sharing
+      };
+
+      if (navigator.share) {
+        shareButton.classList.remove('hidden');
+        shareButton.addEventListener('click', async () => {
+          try {
+            await navigator.share(shareData);
+            console.log('Result shared successfully');
+          } catch (error) {
+            console.error('Error sharing:', error);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
