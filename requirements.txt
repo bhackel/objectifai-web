@@ -1,5 +1,5 @@
-Pillow
-streamlit
+pillow
+Flask
 numpy
 tensorflow
 scikit-image
