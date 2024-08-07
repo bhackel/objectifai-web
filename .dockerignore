@@ -1,0 +1,39 @@
+# Ignore Python bytecode files
+__pycache__
+*.pyc
+*.pyo
+
+# Ignore environment variables and other secrets
+.env
+*.env
+
+# Ignore local Python environment
+.venv/
+
+# Ignore logs
+*.log
+
+# Ignore git repository files
+.git/
+.gitignore
+
+# Ignore Docker files
+Dockerfile
+.dockerignore
+
+# Ignore static files (including uploads and other static content)
+static/
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore unnecessary files from editors and IDEs
+.vscode/
+.idea/

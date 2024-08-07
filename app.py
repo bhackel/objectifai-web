@@ -5,6 +5,7 @@ from tensorflow.keras.models import load_model
 import os
 import uuid
 import random
+import magic  # Library for MIME type checking
 from util import face_aligner
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
@@ -17,8 +18,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Define the maximum width and height for the uploaded images
 MAX_WIDTH = 400
 MAX_HEIGHT = 400
+
 # Define the maximum file age (in minutes) before deletion
 MAX_FILE_AGE_MINUTES = 5
+
+# Define the maximum file size in bytes (e.g., 5 MB)
+MAX_FILE_SIZE = 5 * 1024 * 1024
+
+# Allowed MIME types for image files
+ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/bmp'}
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -29,6 +37,22 @@ def upload_file():
         if file.filename == '':
             return render_template('index.html', error="No file selected. Please select an image.")
         if file:
+            # Check the file size
+            file.seek(0, os.SEEK_END)  # Move to the end of the file
+            file_length = file.tell()  # Get the file size
+            file.seek(0)  # Reset file pointer to the beginning
+
+            if file_length > MAX_FILE_SIZE:
+                return render_template('index.html', error="File size exceeds the limit of 5 MB.")
+
+            # Check the MIME type of the file
+            mime = magic.Magic(mime=True)
+            mime_type = mime.from_buffer(file.read(1024))
+            file.seek(0)  # Reset file pointer to the beginning
+
+            if mime_type not in ALLOWED_MIME_TYPES:
+                return render_template('index.html', error="Invalid file type. Please upload a valid image.")
+
             # Generate a unique filename
             filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
             filepath = os.path.join(UPLOAD_FOLDER, filename)
